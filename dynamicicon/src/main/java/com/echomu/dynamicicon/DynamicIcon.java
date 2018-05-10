@@ -13,6 +13,7 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public class DynamicIcon {
 
     private static DynamicIcon mDynamicIcon = null;
 
-    private Context mContext;
+    private WeakReference<Context> weakReference;
 
     /**
      * 配置数据里的icon列表
@@ -59,7 +60,9 @@ public class DynamicIcon {
      * @param jsonStr json配置
      */
     public void init(Context context, String jsonStr) {
-        this.mContext = context;
+        if (weakReference == null) {
+            this.weakReference = new WeakReference<>(context.getApplicationContext());
+        }
 
         iconBeanList = new Gson().fromJson(jsonStr, new TypeToken<List<IconBean>>() {
         }.getType());
@@ -73,7 +76,9 @@ public class DynamicIcon {
      * @param color RGB颜色值
      */
     public void init(Context context, String jsonStr, int color) {
-        this.mContext = context;
+        if (weakReference == null) {
+            this.weakReference = new WeakReference<>(context.getApplicationContext());
+        }
         this.mColor = color;
 
         iconBeanList = new Gson().fromJson(jsonStr, new TypeToken<List<IconBean>>() {
@@ -119,11 +124,11 @@ public class DynamicIcon {
         Field[] fields = R.drawable.class.getDeclaredFields();
 
         //获取applicationId
-        String packageName=mContext.getPackageName();
+        String packageName=weakReference.get().getPackageName();
         for (Field field : fields) {
             if (resId.equals(field.getName())) {
-                //获取文件名对应的系统生成的id,需指定(主module)包路径 getClass().getPackage().getName(),指定资源类型drawable
-                int resID = mContext.getResources().getIdentifier(field.getName(),
+                //获取文件名对应的系统生成的id,需指定(主module)包路径,指定资源类型drawable
+                int resID = weakReference.get().getResources().getIdentifier(field.getName(),
                         "drawable", packageName);
                 drawableId = resID;
             }
@@ -144,7 +149,7 @@ public class DynamicIcon {
      * @return Drawable
      */
     private Drawable getDrawable(int drawableId, int color) {
-        Drawable drawable = ContextCompat.getDrawable(mContext, drawableId);
+        Drawable drawable = ContextCompat.getDrawable(weakReference.get(), drawableId);
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             drawable = (DrawableCompat.wrap(drawable)).mutate();
         }
