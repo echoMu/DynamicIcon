@@ -1,4 +1,5 @@
 #### 如何使用DynamicIcon？
+详细教程见[https://www.jianshu.com/p/e644bf32def6](Android 根据配置数据动态设置应用内的icon)
 
 ### 一、初始化
 1. 为你的控件设置tag,例如
